@@ -30,24 +30,7 @@ jobs:
     
     - name: Build EXE
       run: |
-        pyinstaller --onefile `
-          --windowed `
-          --name "PDF2PNG轉換器" `
-          --icon=icon.ico `
-          --add-data ".:." `
-          --collect-all pdf2image `
-          main.py
-      continue-on-error: true
-    
-    - name: Build EXE (without icon if failed)
-      if: failure()
-      run: |
-        pyinstaller --onefile `
-          --windowed `
-          --name "PDF2PNG轉換器" `
-          --add-data ".:." `
-          --collect-all pdf2image `
-          main.py
+        pyinstaller --onefile --windowed --name "PDF2PNG轉換器" main.py
     
     - name: Upload artifact
       uses: actions/upload-artifact@v3
