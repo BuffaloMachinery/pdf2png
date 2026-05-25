@@ -6,54 +6,101 @@ on:
       - 'v*'
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows:
     runs-on: windows-latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.1.7
       with:
         fetch-depth: 0
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.1
       with:
         python-version: '3.11'
         cache: 'pip'
     
-    - name: Install Poppler
+    - name: Install Poppler with retry
       run: |
-        choco install poppler -y --no-progress
+        for ($i = 1; $i -le 3; $i++) {
+          try {
+            choco install poppler -y --no-progress --force
+            break
+          } catch {
+            if ($i -eq 3) { throw }
+            Write-Output "Retry $i failed, retrying..."
+            Start-Sleep -Seconds 5
+          }
+        }
       shell: powershell
     
-    - name: Install dependencies
+    - name: Verify Poppler installation
       run: |
-        python -m pip install --upgrade pip wheel
-        pip install -r requirements.txt
-        pip install pyinstaller
+        pdftoppm --version
       shell: powershell
     
-    - name: Build EXE
+    - name: Install Python dependencies with retry
       run: |
-        pyinstaller --onefile --windowed --name "PDF2PNG轉換器" --distpath ./dist main.py
+        python -m pip install --upgrade pip setuptools wheel --retries 5
+        pip install --retries 5 -r requirements.txt
+        pip install --retries 5 pyinstaller
+      shell: powershell
+    
+    - name: List installed packages
+      run: |
+        pip list | Select-String -Pattern "PySimpleGUI|pdf2image|Pillow|pyinstaller"
+      shell: powershell
+    
+    - name: Build EXE with error details
+      run: |
+        Write-Output "Starting PyInstaller build..."
+        $ErrorActionPreference = "Stop"
+        try {
+          pyinstaller `
+            --onefile `
+            --windowed `
+            --name "PDF2PNG轉換器" `
+            --distpath ./dist `
+            --workpath ./build `
+            --specpath ./spec `
+            main.py
+          Write-Output "Build completed successfully"
+        } catch {
+          Write-Output "Build failed with error:"
+          Write-Output $_.Exception.Message
+          exit 1
+        }
       shell: powershell
     
     - name: Check build output
       run: |
-        ls -la dist/
+        Write-Output "Checking dist folder:"
+        if (Test-Path ./dist) {
+          ls -la ./dist/
+          Write-Output "EXE file details:"
+          ls -la ./dist/*.exe | Format-List -Property Name, Length
+        } else {
+          Write-Output "ERROR: dist folder not found!"
+          exit 1
+        }
       shell: powershell
     
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: PDF2PNG-EXE
         path: dist/PDF2PNG轉換器.exe
         retention-days: 7
+        if-no-files-found: error
     
     - name: Create Release and Upload Asset
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v2.0.4
       with:
         files: dist/PDF2PNG轉換器.exe
         fail_on_unmatched_files: true
