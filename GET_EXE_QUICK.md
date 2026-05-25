@@ -1,8 +1,22 @@
-# 🚀 快速获取 EXE - 3 种方法
+# 🚀 快速获取 EXE - 推薦本地構建
 
-## 方法 1️⃣: 一鍵自動構建（推薦 ⭐⭐⭐）
+## ⚠️ 重要通知
 
-**最簡單，最可靠的方法！**
+由於 GitHub Actions 環境限制，**自動 CI/CD 構建不穩定**。
+
+**最推薦的方法：直接在 Windows 上本地構建！**
+
+這樣可以：
+- ✅ 100% 完整功能
+- ✅ 完全支持 PDF 轉換
+- ✅ 無需依賴 GitHub Actions
+- ✅ 更可靠，更快速
+
+---
+
+## 方法 1️⃣: 本地構建 - BUILD_EXE.bat（推薦 ⭐⭐⭐⭐⭐）
+
+**這是最好、最可靠的方法！**
 
 ### 前置條件
 - ✅ Windows 10/11/12
@@ -32,7 +46,7 @@
 
 3. **雙擊執行 `BUILD_EXE.bat`**
    - 自動安裝所有 Python 依賴
-   - 自動構建 EXE
+   - 自動構建完整功能的 EXE
    - 完成後 EXE 在 `dist` 文件夾中
 
 ### 完成！
@@ -40,24 +54,11 @@
 dist/PDF2PNG轉換器.exe
 ```
 
----
-
-## 方法 2️⃣: 從 GitHub Release 下載（最簡單 ⭐⭐）
-
-如果 GitHub Actions 成功构建了 EXE：
-
-1. 訪問 Releases 頁面
-   - https://github.com/BuffaloMachinery/pdf2png/releases
-
-2. 下載 `PDF2PNG轉換器.exe`
-
-3. 雙擊運行 ✅
-
-**注意**: 如果 Release 中沒有 EXE，請使用方法 1
+✅ 完全功能的 PDF 轉換器！
 
 ---
 
-## 方法 3️⃣: 手動構建（進階用戶）
+## 方法 2️⃣: 手動構建（進階用戶）
 
 ### 步驟
 
@@ -80,6 +81,17 @@ pyinstaller --onefile --windowed --name "PDF2PNG轉換器" main.py
 
 ---
 
+## 方法 3️⃣: 從 GitHub Release 下載（有限功能）
+
+⚠️ **注意**：GitHub Actions 構建不穩定，Release 中的 EXE 可能不完整。
+
+如果存在，可以在以下位置下載：
+https://github.com/BuffaloMachinery/pdf2png/releases
+
+**建議：改用方法 1 或 2**
+
+---
+
 ## 🆘 常見問題
 
 ### Q: 執行 BUILD_EXE.bat 後沒有反應？
@@ -98,9 +110,17 @@ choco install poppler -y
 
 ### Q: 構建失敗？
 **A:**
-- 確保 Python 版本 3.9+
-- 運行 `pip install --upgrade pip`
+- 確保 Python 版本 3.9+：`python --version`
+- 運行：`pip install --upgrade pip`
 - 刪除 `build` 和 `dist` 文件夾後重試
+- 查看 [BUILD_LOCAL_WINDOWS.md](BUILD_LOCAL_WINDOWS.md) 獲取詳細說明
+
+### Q: 為什麼 GitHub Actions 不穩定？
+**A:**
+- Windows runner 環境限制
+- Poppler 安裝不穩定
+- 網路和重試問題
+- 本地構建完全避免這些問題
 
 ### Q: 可以分享 EXE 嗎？
 **A:** 當然可以！
@@ -112,28 +132,40 @@ choco install poppler -y
 
 ## 📊 比較表
 
-| 方法 | 難度 | 時間 | 可靠性 | 推薦指數 |
-|------|------|------|--------|---------|
-| 1. BUILD_EXE.bat | ⭐ 極簡 | 5 分鐘 | 🟢 很高 | ⭐⭐⭐ |
-| 2. GitHub Release | ⭐ 極簡 | 1 分鐘 | 🟡 中等 | ⭐⭐ |
-| 3. 手動構建 | ⭐⭐⭐ 複雜 | 10 分鐘 | 🟢 很高 | ⭐ |
+| 方法 | 難度 | 時間 | 完整性 | 可靠性 | 推薦度 |
+|------|------|------|--------|--------|---------|
+| 1. BUILD_EXE.bat | ⭐ 極簡 | 5 分鐘 | ✅ 100% | 🟢 很高 | ⭐⭐⭐⭐⭐ |
+| 2. 手動構建 | ⭐⭐ 簡單 | 10 分鐘 | ✅ 100% | 🟢 很高 | ⭐⭐⭐⭐ |
+| 3. GitHub Release | ⭐ 極簡 | 1 分鐘 | 🟡 有限 | 🟡 中等 | ⭐⭐ |
 
 ---
 
 ## 🎯 建議流程
 
-1. **首先嘗試方法 1** → `BUILD_EXE.bat`（最可靠）
+1. **首先使用方法 1** → `BUILD_EXE.bat`（最推薦）
 2. **如果失敗** → 檢查 Python 和 Poppler 是否正確安裝
-3. **最後選擇** → 方法 3（手動構建）
+3. **最後選擇** → 方法 2（手動構建）
 
 ---
 
-## 需要幫助？
+## 📚 更多資源
 
-- 📖 查看 [BUILD_LOCAL_WINDOWS.md](BUILD_LOCAL_WINDOWS.md) 獲取詳細說明
-- 📖 查看 [README.md](README.md) 了解使用方法
-- 🐛 提交 Issue: https://github.com/BuffaloMachinery/pdf2png/issues
+- 📖 [BUILD_LOCAL_WINDOWS.md](BUILD_LOCAL_WINDOWS.md) - 詳細構建指南
+- 📖 [README.md](README.md) - 使用說明
+- 📖 [SETUP_GUIDE.md](SETUP_GUIDE.md) - 完整設置指南
+- 🐛 Issue 追蹤: https://github.com/BuffaloMachinery/pdf2png/issues
 
 ---
 
-**最推薦的方式：直接在 Windows 上使用 `BUILD_EXE.bat` 構建，避免依賴 GitHub Actions！** ✨
+## ✨ 最終建議
+
+**不要依賴 GitHub Actions！直接在您的 Windows 電腦上構建。**
+
+這樣可以：
+- 獲得完整功能
+- 無需等待 CI/CD
+- 100% 可靠
+- 支持所有 PDF 轉換功能
+
+**立即開始：雙擊 `BUILD_EXE.bat`！** 🚀
+
