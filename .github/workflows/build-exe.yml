@@ -15,15 +15,14 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
     - name: Set up Python
-      uses: actions/setup-python@v5.1.1
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip'
     
     - name: Install Poppler with retry
       run: |
@@ -46,9 +45,9 @@ jobs:
     
     - name: Install Python dependencies with retry
       run: |
-        python -m pip install --upgrade pip setuptools wheel --retries 5
-        pip install --retries 5 -r requirements.txt
-        pip install --retries 5 pyinstaller
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt
+        pip install pyinstaller
       shell: powershell
     
     - name: List installed packages
@@ -91,7 +90,7 @@ jobs:
       shell: powershell
     
     - name: Upload artifact
-      uses: actions/upload-artifact@v4.4.0
+      uses: actions/upload-artifact@v4
       with:
         name: PDF2PNG-EXE
         path: dist/PDF2PNG轉換器.exe
@@ -100,7 +99,7 @@ jobs:
     
     - name: Create Release and Upload Asset
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2.0.4
+      uses: softprops/action-gh-release@v2
       with:
         files: dist/PDF2PNG轉換器.exe
         fail_on_unmatched_files: true
