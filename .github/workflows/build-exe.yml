@@ -11,10 +11,10 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     
@@ -33,20 +33,16 @@ jobs:
         pyinstaller --onefile --windowed --name "PDF2PNG轉換器" main.py
     
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: PDF2PNG-EXE
         path: dist/PDF2PNG轉換器.exe
     
-    - name: Create Release
+    - name: Create Release and Upload Asset
       if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/create-release@v1
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: PDF2PNG 轉換器 ${{ github.ref_name }}
+        files: dist/PDF2PNG轉換器.exe
         body: |
           # PDF2PNG 轉換器 - ${{ github.ref_name }}
           
@@ -68,16 +64,5 @@ jobs:
           
           ## 下載
           在下方 Assets 中下載 `PDF2PNG轉換器.exe`
-        draft: false
-        prerelease: false
-    
-    - name: Upload Release Asset
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/PDF2PNG轉換器.exe
-        asset_name: PDF2PNG轉換器.exe
-        asset_content_type: application/octet-stream
