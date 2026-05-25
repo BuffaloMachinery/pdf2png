@@ -1,0 +1,100 @@
+name: Build Windows EXE
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poppler
+      run: |
+        choco install poppler -y
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build EXE
+      run: |
+        pyinstaller --onefile `
+          --windowed `
+          --name "PDF2PNG轉換器" `
+          --icon=icon.ico `
+          --add-data ".:." `
+          --collect-all pdf2image `
+          main.py
+      continue-on-error: true
+    
+    - name: Build EXE (without icon if failed)
+      if: failure()
+      run: |
+        pyinstaller --onefile `
+          --windowed `
+          --name "PDF2PNG轉換器" `
+          --add-data ".:." `
+          --collect-all pdf2image `
+          main.py
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: PDF2PNG-EXE
+        path: dist/PDF2PNG轉換器.exe
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: PDF2PNG 轉換器 ${{ github.ref_name }}
+        body: |
+          # PDF2PNG 轉換器 - ${{ github.ref_name }}
+          
+          ## 功能
+          - ✅ 選擇 PDF 檔案進行轉換
+          - ✅ 選擇輸出位置
+          - ✅ 可調節解析度 (100-600 DPI)
+          - ✅ 自動將每一頁保存為 PNG 圖像
+          
+          ## 使用方式
+          1. 下載 `PDF2PNG轉換器.exe`
+          2. 雙擊運行
+          3. 選擇 PDF 檔案和輸出位置
+          4. 點擊轉換開始
+          
+          ## 系統要求
+          - Windows 10/11
+          - 無需安裝任何其他軟件
+          
+          ## 下載
+          在下方 Assets 中下載 `PDF2PNG轉換器.exe`
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/PDF2PNG轉換器.exe
+        asset_name: PDF2PNG轉換器.exe
+        asset_content_type: application/octet-stream
