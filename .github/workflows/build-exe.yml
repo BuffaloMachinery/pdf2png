@@ -6,103 +6,46 @@ on:
       - 'v*'
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build-windows:
     runs-on: windows-latest
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v5.1.1
       with:
         python-version: '3.11'
     
-    - name: Install Poppler with retry
-      run: |
-        for ($i = 1; $i -le 3; $i++) {
-          try {
-            choco install poppler -y --no-progress --force
-            break
-          } catch {
-            if ($i -eq 3) { throw }
-            Write-Output "Retry $i failed, retrying..."
-            Start-Sleep -Seconds 5
-          }
-        }
-      shell: powershell
+    - name: Install Poppler
+      shell: cmd
+      run: choco install poppler -y
     
-    - name: Verify Poppler installation
+    - name: Install Python dependencies
+      shell: cmd
       run: |
-        pdftoppm --version
-      shell: powershell
-    
-    - name: Install Python dependencies with retry
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
-      shell: powershell
     
-    - name: List installed packages
-      run: |
-        pip list | Select-String -Pattern "PySimpleGUI|pdf2image|Pillow|pyinstaller"
-      shell: powershell
-    
-    - name: Build EXE with error details
-      run: |
-        Write-Output "Starting PyInstaller build..."
-        $ErrorActionPreference = "Stop"
-        try {
-          pyinstaller `
-            --onefile `
-            --windowed `
-            --name "PDF2PNG轉換器" `
-            --distpath ./dist `
-            --workpath ./build `
-            --specpath ./spec `
-            main.py
-          Write-Output "Build completed successfully"
-        } catch {
-          Write-Output "Build failed with error:"
-          Write-Output $_.Exception.Message
-          exit 1
-        }
-      shell: powershell
-    
-    - name: Check build output
-      run: |
-        Write-Output "Checking dist folder:"
-        if (Test-Path ./dist) {
-          ls -la ./dist/
-          Write-Output "EXE file details:"
-          ls -la ./dist/*.exe | Format-List -Property Name, Length
-        } else {
-          Write-Output "ERROR: dist folder not found!"
-          exit 1
-        }
-      shell: powershell
+    - name: Build EXE
+      shell: cmd
+      run: pyinstaller --onefile --windowed --name "PDF2PNG轉換器" main.py
     
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.4.0
       with:
         name: PDF2PNG-EXE
         path: dist/PDF2PNG轉換器.exe
-        retention-days: 7
         if-no-files-found: error
     
-    - name: Create Release and Upload Asset
+    - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v2.0.4
       with:
         files: dist/PDF2PNG轉換器.exe
-        fail_on_unmatched_files: true
         body: |
           # PDF2PNG 轉換器 - ${{ github.ref_name }}
           
@@ -112,17 +55,8 @@ jobs:
           - ✅ 可調節解析度 (100-600 DPI)
           - ✅ 自動將每一頁保存為 PNG 圖像
           
-          ## 使用方式
-          1. 下載 `PDF2PNG轉換器.exe`
-          2. 雙擊運行
-          3. 選擇 PDF 檔案和輸出位置
-          4. 點擊轉換開始
-          
           ## 系統要求
           - Windows 10/11/12
           - 無需安裝任何其他軟件
-          
-          ## 下載
-          在下方 Assets 中下載 `PDF2PNG轉換器.exe`
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
