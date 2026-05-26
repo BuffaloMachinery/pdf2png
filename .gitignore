@@ -44,3 +44,8 @@ dist/
 # Generated files
 *.exe
 *.ico
+
+# Release artifact
+!dist/
+dist/*
+!dist/PDF2PNG_Converter.exe

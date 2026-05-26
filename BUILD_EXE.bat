@@ -1,77 +1,73 @@
 @echo off
-REM PDF2PNG 轉換器 - 構建 EXE 批處理腳本
-REM 適用於 Windows 用戶在本地構建可執行檔
-
+cls
 echo ========================================
-echo PDF2PNG 轉換器 - 構建 EXE
+echo PDF2PNG Converter - Building EXE (With Poppler)
 echo ========================================
 echo.
 
-REM 檢查 Python
+REM 1. Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [❌ 錯誤] Python 未找到
-    echo 請從 https://www.python.org/downloads/ 安裝 Python 3.9+
+    echo [ERROR] Python not found!
     pause
     exit /b 1
 )
 
-REM 檢查 Poppler
-pdftoppm --version >nul 2>&1
-if errorlevel 1 (
-    echo [⚠️  警告] Poppler 未找到，某些依賴項可能無法正常工作
-    echo 可以通過 Chocolatey 安裝：choco install poppler
-    echo.
+REM 2. Check main.py exists
+if not exist "main.py" (
+    echo [ERROR] main.py not found in this folder!
+    pause
+    exit /b 1
 )
 
-echo [✓] 環境檢查完成
+REM 【新增檢查】檢查 poppler 資料夾是否存在
+if not exist "poppler\bin\pdftoppm.exe" (
+    echo [ERROR] poppler\bin\pdftoppm.exe not found!
+    echo Please make sure you downloaded Poppler and placed it in the "poppler" folder.
+    pause
+    exit /b 1
+)
+
+echo [OK] Environment check passed.
 echo.
 
-echo [進行中] 安裝 Python 依賴項...
+REM 3. Install Requirements
+echo [INFO] Installing requirements...
 pip install -r requirements.txt
 if errorlevel 1 (
-    echo [❌ 錯誤] 安裝依賴項失敗
+    echo [ERROR] Failed to install requirements.
     pause
     exit /b 1
 )
 
-echo [✓] 依賴項安裝完成
-echo.
-
-echo [進行中] 安裝 PyInstaller...
+REM 4. Install PyInstaller
+echo [INFO] Installing PyInstaller...
 pip install pyinstaller
 if errorlevel 1 (
-    echo [❌ 錯誤] 安裝 PyInstaller 失敗
+    echo [ERROR] Failed to install PyInstaller.
     pause
     exit /b 1
 )
 
-echo [✓] PyInstaller 安裝完成
+echo.
+echo [INFO] Starting PyInstaller build...
+echo Please wait a moment...
 echo.
 
-echo [進行中] 構建 EXE 檔案...
-echo 這可能需要幾分鐘...
-echo.
-
-pyinstaller --onefile --windowed --name "PDF2PNG轉換器" main.py
+REM 5. Run PyInstaller (💡 已加入 --add-data 參數包入 poppler 資料夾)
+python -m PyInstaller --onefile --windowed --add-data "poppler;poppler" --name "PDF2PNG_Converter" "main.py"
 
 if errorlevel 1 (
-    echo [❌ 構建失敗
+    echo [ERROR] PyInstaller build failed!
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo [✅] 建置成功！
+echo [SUCCESS] Build completed successfully!
 echo ========================================
 echo.
-echo EXE 檔案位置：
-echo   dist\PDF2PNG轉換器.exe
-echo.
-echo 您現在可以：
-echo 1. 雙擊運行 PDF2PNG轉換器.exe
-echo 2. 將其複製到任何位置使用
-echo 3. 與他人分享
+echo Your EXE is inside the "dist" folder.
 echo.
 pause

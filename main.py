@@ -6,6 +6,7 @@ A simple GUI application to convert PDF files to PNG images
 import PySimpleGUI as sg
 from pdf2image import convert_from_path
 import os
+import sys
 from pathlib import Path
 
 # Set the theme
@@ -22,14 +23,14 @@ def main():
         # PDF file selection
         [sg.Text('選擇 PDF 檔案:', font=('Helvetica', 10, 'bold'))],
         [sg.InputText(key='-PDF_PATH-', disabled=True, size=(50, 1)), 
-         sg.FileBrowse('瀏覽', file_types=(('PDF Files', '*.pdf'),), key='-PDF_FILE-')],
+         sg.FileBrowse('瀏覽', file_types=(('PDF Files', '*.pdf'),), target='-PDF_PATH-')],
         
         [sg.Text('')],
         
         # Output folder selection
         [sg.Text('選擇輸出位置:', font=('Helvetica', 10, 'bold'))],
         [sg.InputText(key='-OUTPUT_PATH-', disabled=True, size=(50, 1)), 
-         sg.FolderBrowse('瀏覽', key='-OUTPUT_FOLDER-')],
+         sg.FolderBrowse('瀏覽', target='-OUTPUT_PATH-')],
         
         [sg.Text('')],
         
@@ -40,7 +41,7 @@ def main():
         [sg.Text('')],
         
         # Progress text
-        [sg.Multiline(size=(60, 10), disabled=True, key='-OUTPUT-', background_color='#1a1a1a')],
+        [sg.Multiline(size=(60, 10), disabled=True, key='-OUTPUT-', background_color='#ffffff', text_color='#000000')],
         
         [sg.Text('')],
         
@@ -53,9 +54,8 @@ def main():
     # Create the window
     window = sg.Window('PDF 轉 PNG 轉換器', layout, finalize=True)
     
-    # Bind file browser update
-    window['-PDF_PATH-'].update(values='')
-    window['-OUTPUT_PATH-'].update(values='')
+    window['-PDF_PATH-'].update('')
+    window['-OUTPUT_PATH-'].update('')
     
     # Event loop
     while True:
@@ -64,21 +64,11 @@ def main():
         if event == sg.WINDOW_CLOSED or event == '結束':
             break
         
-        elif event == '-PDF_FILE-':
-            # Update PDF path when file is selected
-            window['-PDF_PATH-'].update(values['-PDF_FILE-'])
-        
-        elif event == '-OUTPUT_FOLDER-':
-            # Update output path when folder is selected
-            window['-OUTPUT_PATH-'].update(values['-OUTPUT_FOLDER-'])
-        
         elif event == '清除':
             # Clear all inputs
             window['-PDF_PATH-'].update('')
             window['-OUTPUT_PATH-'].update('')
             window['-OUTPUT-'].update('')
-            window['-PDF_FILE-'].update('')
-            window['-OUTPUT_FOLDER-'].update('')
         
         elif event == '轉換':
             # Convert PDF to PNG
@@ -112,8 +102,18 @@ def main():
                 # Get the PDF filename without extension
                 pdf_filename = Path(pdf_path).stem
                 
-                # Convert PDF to images
-                images = convert_from_path(pdf_path, dpi=dpi)
+                # 💡 【核心修正】動態相容：判斷是直接執行 .py 還是執行打包後的 .exe
+                if getattr(sys, 'frozen', False):
+                    # 如果是打包後的 EXE，PyInstaller 會解壓到 sys._MEIPASS
+                    base_path = sys._MEIPASS
+                else:
+                    # 如果是直接執行 main.py
+                    base_path = os.path.dirname(os.path.abspath(__file__))
+                
+                poppler_bin_path = os.path.join(base_path, 'poppler', 'bin')
+                
+                # 💡 將 poppler_path 帶入轉換函數
+                images = convert_from_path(pdf_path, dpi=dpi, poppler_path=poppler_bin_path)
                 
                 # Save images as PNG
                 output_text.update('⏳ 正在保存 PNG 檔案...\n', append=True)
